@@ -26,6 +26,8 @@ from sklearn.metrics import (
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from xgboost import XGBClassifier
+from lightgbm import LGBMClassifier
+from catboost import CatBoostClassifier
 
 from risk_model.datasets import load_raw_dataset
 from risk_model.features import FeatureArtifacts, build_feature_matrix
@@ -85,6 +87,51 @@ MODEL_BUILDERS = {
         random_state=seed,
         verbosity=0,
         n_jobs=0,
+    ),
+    "lightgbm": lambda seed: LGBMClassifier(
+        learning_rate=0.05,
+        n_estimators=400,
+        max_depth=-1,
+        num_leaves=64,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        random_state=seed,
+        n_jobs=-1,
+        verbose=-1,
+    ),
+    "lightgbm_tuned": lambda seed: LGBMClassifier(
+        learning_rate=0.03,
+        n_estimators=600,
+        max_depth=-1,
+        num_leaves=96,
+        subsample=0.9,
+        colsample_bytree=0.9,
+        min_child_samples=40,
+        reg_lambda=0.5,
+        reg_alpha=0.1,
+        random_state=seed,
+        n_jobs=-1,
+        verbose=-1,
+    ),
+    "catboost": lambda seed: CatBoostClassifier(
+        learning_rate=0.05,
+        depth=6,
+        n_estimators=500,
+        l2_leaf_reg=3.0,
+        subsample=0.8,
+        verbose=False,
+        random_seed=seed,
+        allow_writing_files=False,
+    ),
+    "catboost_tuned": lambda seed: CatBoostClassifier(
+        learning_rate=0.03,
+        depth=7,
+        n_estimators=700,
+        l2_leaf_reg=5.0,
+        subsample=0.9,
+        verbose=False,
+        random_seed=seed,
+        allow_writing_files=False,
     ),
 }
 

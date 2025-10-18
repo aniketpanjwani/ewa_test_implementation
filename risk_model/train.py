@@ -33,7 +33,62 @@ from risk_model.splits import assign_time_split, compute_split_boundaries, summa
 
 LOGGER = logging.getLogger(__name__)
 
-MODEL_REGISTRY = ("logistic_regression", "hist_gradient_boosting", "xgboost")
+MODEL_BUILDERS = {
+    "logistic_regression": lambda seed: LogisticRegression(
+        penalty="l2",
+        solver="lbfgs",
+        max_iter=1000,
+        random_state=seed,
+    ),
+    "hist_gradient_boosting": lambda seed: HistGradientBoostingClassifier(
+        learning_rate=0.05,
+        max_depth=None,
+        max_iter=400,
+        min_samples_leaf=20,
+        l2_regularization=0.01,
+        random_state=seed,
+    ),
+    "hist_gradient_boosting_tuned": lambda seed: HistGradientBoostingClassifier(
+        learning_rate=0.035,
+        max_depth=6,
+        max_iter=550,
+        min_samples_leaf=15,
+        l2_regularization=0.0,
+        validation_fraction=None,
+        random_state=seed,
+    ),
+    "xgboost": lambda seed: XGBClassifier(
+        objective="binary:logistic",
+        eval_metric="logloss",
+        learning_rate=0.05,
+        max_depth=4,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        n_estimators=400,
+        reg_lambda=1.0,
+        reg_alpha=0.0,
+        random_state=seed,
+        verbosity=0,
+        n_jobs=0,
+    ),
+    "xgboost_tuned": lambda seed: XGBClassifier(
+        objective="binary:logistic",
+        eval_metric="logloss",
+        learning_rate=0.03,
+        max_depth=5,
+        subsample=0.9,
+        colsample_bytree=0.9,
+        min_child_weight=5,
+        n_estimators=600,
+        reg_lambda=0.5,
+        reg_alpha=0.1,
+        random_state=seed,
+        verbosity=0,
+        n_jobs=0,
+    ),
+}
+
+MODEL_REGISTRY = tuple(MODEL_BUILDERS.keys())
 
 
 def parse_args() -> argparse.Namespace:
@@ -195,38 +250,11 @@ def _build_preprocessor(artifacts: FeatureArtifacts) -> ColumnTransformer:
 
 
 def _instantiate_model(model_name: str, seed: int):
-    if model_name == "logistic_regression":
-        return LogisticRegression(
-            penalty="l2",
-            solver="lbfgs",
-            max_iter=1000,
-            random_state=seed,
-        )
-    if model_name == "hist_gradient_boosting":
-        return HistGradientBoostingClassifier(
-            learning_rate=0.05,
-            max_depth=None,
-            max_iter=400,
-            min_samples_leaf=20,
-            l2_regularization=0.01,
-            random_state=seed,
-        )
-    if model_name == "xgboost":
-        return XGBClassifier(
-            objective="binary:logistic",
-            eval_metric="logloss",
-            learning_rate=0.05,
-            max_depth=4,
-            subsample=0.8,
-            colsample_bytree=0.8,
-            n_estimators=400,
-            reg_lambda=1.0,
-            reg_alpha=0.0,
-            random_state=seed,
-            verbosity=0,
-            n_jobs=0,
-        )
-    raise ValueError(f"Unknown model name: {model_name}")
+    try:
+        builder = MODEL_BUILDERS[model_name]
+    except KeyError as exc:
+        raise ValueError(f"Unknown model name: {model_name}") from exc
+    return builder(seed)
 
 
 def _compute_metrics(y_true: Iterable[int], proba: np.ndarray) -> Dict[str, float]:

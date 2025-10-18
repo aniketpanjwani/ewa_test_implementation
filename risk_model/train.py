@@ -7,7 +7,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import joblib
 import numpy as np
@@ -100,15 +100,20 @@ MODEL_BUILDERS = {
         verbose=-1,
     ),
     "lightgbm_tuned": lambda seed: LGBMClassifier(
-        learning_rate=0.03,
-        n_estimators=600,
-        max_depth=-1,
-        num_leaves=96,
-        subsample=0.9,
-        colsample_bytree=0.9,
-        min_child_samples=40,
-        reg_lambda=0.5,
-        reg_alpha=0.1,
+        objective="binary",
+        metric="auc",
+        learning_rate=0.005,
+        n_estimators=400,
+        max_depth=5,
+        num_leaves=69,
+        min_child_samples=149,
+        subsample=0.52,
+        subsample_freq=2,
+        colsample_bytree=0.79,
+        reg_lambda=0.0007736823927296683,
+        reg_alpha=0.00043373812368277954,
+        min_split_gain=0.154,
+        max_bin=127,
         random_state=seed,
         n_jobs=-1,
         verbose=-1,
@@ -210,8 +215,18 @@ def main() -> None:
             metrics["brier"],
         )
 
-    best_model_name = max(model_results, key=lambda r: r["val_metrics"]["roc_auc"])["model"]
-    LOGGER.info("Selected model: %s", best_model_name)
+    def _selection_key(result: Dict[str, object]) -> tuple[float, float]:
+        metrics = result["val_metrics"]
+        return float(metrics["roc_auc"]), float(metrics["pr_auc"])
+
+    best_entry = max(model_results, key=_selection_key)
+    best_model_name = best_entry["model"]
+    LOGGER.info(
+        "Selected model by validation ROC-AUC: %s (ROC-AUC=%.3f PR-AUC=%.3f)",
+        best_model_name,
+        best_entry["val_metrics"]["roc_auc"],
+        best_entry["val_metrics"]["pr_auc"],
+    )
 
     final_preprocessor = _build_preprocessor(feature_artifacts)
     final_estimator = _instantiate_model(best_model_name, args.seed)
@@ -248,6 +263,12 @@ def main() -> None:
         test_metrics["pr_auc"],
         test_metrics["brier"],
     )
+    if test_metrics["roc_auc"] < 0.70:
+        LOGGER.warning(
+            "Test ROC-AUC %.3f falls below the README pass bar (0.70). "
+            "Plan follow-up tuning before final delivery.",
+            test_metrics["roc_auc"],
+        )
 
     artifact_paths = _persist_artifacts(
         out_dir=out_dir,
@@ -359,6 +380,7 @@ def _persist_artifacts(
         "calibration": calibration,
         "metrics": metrics_by_split,
         "model_comparison": model_results,
+        "selection_metric": "validation_roc_auc",
         "split_counts": split_counts,
         "label_distribution": label_distribution,
         "feature_metadata": {

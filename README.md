@@ -3,7 +3,7 @@
 This repository houses the working implementation for the EWA take-home assessment.
 It follows the structure recommended in the challenge brief and now contains end-to-end
 pipelines for the repayment risk model (Task 2A) and an in-progress pay-date predictor
-(Task 2B). Companion documentation lives in the root project under `../docs`.
+(Task 2B).
 
 ## Task status (per `../data-challenge/README.md`)
 
@@ -40,3 +40,26 @@ pipelines for the repayment risk model (Task 2A) and an in-progress pay-date pre
 
 3. Use `make` targets (e.g. `make risk-train`) to execute commands inside the `uv`
    environment; the recipes call `uv run python …` to ensure isolation.
+
+## Support bot (Task 2C) outlook
+
+The challenge expects a grounded FAQ assistant that answers user questions using
+local documentation. The proposed approach keeps everything self-contained:
+Markdown help files would live under `implementation/docs`, we would index those
+passages with BM25 for lexical matching, and optionally rerank the top hits with
+lightweight sentence embeddings so the most relevant snippets surface first. Answers
+could then be constructed by extracting or lightly compressing the best matching
+passage and always appending explicit citations (for example, `Source: fees.md`)
+to satisfy the grounding requirement.
+
+Evaluation would replay the provided golden questions by calling the same CLI,
+measure semantic similarity against reference answers, confirm that cited sources
+match the expected filenames, and track latency to stay within the 500 ms budget.
+Metrics and diagnostics would be written alongside the bot artifacts so reviewers can
+audit retrieval quality without rerunning the pipeline.
+
+Today, this repository cannot implement or validate that plan because the FAQ
+Markdown corpus and `bot_eval.jsonl` golden set are not included in the
+`free-doom/data-challenge` repository. Once those assets arrive, populate
+`implementation/docs`, build the BM25/embedding artifacts, and wire up the CLI plus
+evaluation harness following the outline above.

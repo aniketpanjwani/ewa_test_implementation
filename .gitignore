@@ -5,6 +5,7 @@ __pycache__/
 # Virtual environments
 .venv/
 .uv/
+*.egg-info/
 
 # Data and artifacts
 artifacts/
@@ -15,4 +16,3 @@ data/
 
 # OS files
 .DS_Store
-

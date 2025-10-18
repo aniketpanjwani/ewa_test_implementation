@@ -66,6 +66,7 @@ def build_feature_matrix(
         }
     )
     features = features.join(user_features, on="user_id")
+    features["employer_id"] = features["user_id"].map(users["employer_id"]).astype("string")
 
     features["user_base_salary_cents"] = features["user_base_salary_cents"].astype(float)
     features["user_kyc_verified"] = (
@@ -76,10 +77,12 @@ def build_feature_matrix(
     income_features = _compute_income_cadence_features(advances, payroll_txns)
     cashflow_features = _compute_cashflow_features(advances, transactions, cashflow_windows)
     behavioural_features = _compute_behavioural_features(advances)
+    employer_features = _compute_employer_features(advances, users)
 
     features = features.join(income_features)
     features = features.join(cashflow_features)
     features = features.join(behavioural_features)
+    features = features.join(employer_features)
 
     features["amount_to_salary_ratio"] = _safe_divide(
         features["advance_amount_cents"], features["user_base_salary_cents"]
@@ -107,6 +110,14 @@ def build_feature_matrix(
             "prior_writeoff_streak",
             "prior_days_since_last_late",
             "prior_days_since_last_writeoff",
+            "employer_prior_adv_count",
+            "employer_prior_bad_rate",
+            "employer_prior_late_rate",
+            "employer_prior_writeoff_rate",
+            "employer_prior_bad_rate_30d",
+            "employer_prior_adv_30d",
+            "employer_prior_user_diversity",
+            "employer_prior_adv_per_user",
             "cf_credit_30d",
             "cf_debit_30d",
             "cf_txn_count_30d",
@@ -122,11 +133,13 @@ def build_feature_matrix(
     )
 
     categorical_columns = ["pay_frequency"]
+    if "employer_id" in features.columns:
+        categorical_columns.append("employer_id")
 
     metadata = {
         "cashflow_windows": list(cashflow_windows),
         "feature_columns": features.columns.tolist(),
-        "reference_columns": ["user_id", "requested_at"],
+        "reference_columns": ["user_id", "requested_at", "employer_id"],
         "label": "bad_outcome",
     }
 
@@ -363,6 +376,58 @@ def _compute_behavioural_features(advances: pd.DataFrame) -> pd.DataFrame:
     for column in behaviour_df.columns:
         behaviour_df[column] = behaviour_df[column].astype(float)
     return behaviour_df
+
+
+def _compute_employer_features(advances: pd.DataFrame, users: pd.DataFrame) -> pd.DataFrame:
+    user_employers = users["employer_id"].dropna()
+    employer_records: List[Dict[str, Any]] = []
+
+    adv_emp = advances.copy()
+    adv_emp["employer_id"] = adv_emp["user_id"].map(user_employers)
+    adv_emp = adv_emp.dropna(subset=["employer_id"])
+    adv_emp = adv_emp.sort_values("requested_at")
+
+    for employer_id, group in adv_emp.groupby("employer_id"):
+        group = group.sort_values("requested_at").reset_index(drop=True)
+        for idx, row in group.iterrows():
+            prior = group.iloc[:idx]
+            record: Dict[str, Any] = {"advance_id": row["advance_id"]}
+            if prior.empty:
+                record.update(
+                    {
+                        "employer_prior_adv_count": 0.0,
+                        "employer_prior_bad_rate": np.nan,
+                        "employer_prior_late_rate": np.nan,
+                        "employer_prior_writeoff_rate": np.nan,
+                        "employer_prior_bad_rate_30d": np.nan,
+                        "employer_prior_adv_30d": 0.0,
+                        "employer_prior_user_diversity": 0.0,
+                        "employer_prior_adv_per_user": np.nan,
+                    }
+                )
+            else:
+                prior_30d = prior[
+                    prior["requested_at"] >= row["requested_at"] - pd.Timedelta(days=30)
+                ]
+                record["employer_prior_adv_count"] = float(len(prior))
+                record["employer_prior_bad_rate"] = prior["bad_outcome"].astype(float).mean()
+                record["employer_prior_late_rate"] = prior["was_late"].astype(float).mean()
+                record["employer_prior_writeoff_rate"] = prior["wrote_off"].astype(float).mean()
+                record["employer_prior_bad_rate_30d"] = (
+                    prior_30d["bad_outcome"].astype(float).mean() if not prior_30d.empty else np.nan
+                )
+                record["employer_prior_adv_30d"] = float(len(prior_30d))
+                unique_users = prior["user_id"].nunique()
+                record["employer_prior_user_diversity"] = float(unique_users)
+                record["employer_prior_adv_per_user"] = (
+                    float(len(prior)) / unique_users if unique_users else np.nan
+                )
+            employer_records.append(record)
+
+    employer_df = pd.DataFrame.from_records(employer_records).set_index("advance_id")
+    for column in employer_df.columns:
+        employer_df[column] = employer_df[column].astype(float)
+    return employer_df
 
 
 def _net_cashflow_columns(cashflow_windows: Sequence[int]) -> List[str]:

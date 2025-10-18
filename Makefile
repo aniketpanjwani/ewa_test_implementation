@@ -13,7 +13,7 @@ risk-train:
 
 # Evaluate the repayment risk model.
 risk-eval:
-	$(PYTHON) risk_model/evaluate.py --data ./data --artifacts ./artifacts/risk
+	$(PYTHON) risk_model/evaluate.py --data ./data --artifacts ./artifacts/risk --out ./artifacts/risk/eval
 
 # Placeholder targets for future tasks.
 paydate-eval:

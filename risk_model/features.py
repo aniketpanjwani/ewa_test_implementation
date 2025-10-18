@@ -112,6 +112,9 @@ def build_feature_matrix(
     numeric_columns.extend(
         col for col in _net_cashflow_columns(cashflow_windows) if col in features.columns
     )
+    numeric_columns.extend(
+        col for col in ["cf_ewm_net_7d", "cf_ewm_net_14d", "cf_ewm_net_30d"] if col in features.columns
+    )
 
     categorical_columns = ["pay_frequency"]
 
@@ -238,15 +241,29 @@ def _compute_cashflow_features(
                 -window30.loc[window30["amount_cents"] < 0, "amount_cents"].sum()
             )
             record["cf_txn_count_30d"] = float(len(window30))
-            if not window30.empty:
-                daily_net = (
-                    window30.set_index("posted_at")["amount_cents"]
-                    .resample("D")
-                    .sum()
-                )
-                record["cf_volatility_30d"] = float(daily_net.std(ddof=0))
+
+            daily_net = (
+                prior_txns.set_index("posted_at")["amount_cents"]
+                .resample("D")
+                .sum()
+            )
+            if not daily_net.empty:
+                daily_net = daily_net.tz_localize(None)
+                start_30 = (row.requested_at - pd.Timedelta(days=30)).tz_convert(None).normalize()
+                requested_day = row.requested_at.tz_convert(None).normalize()
+                recent_net = daily_net.loc[start_30:requested_day]
+                record["cf_volatility_30d"] = float(recent_net.std(ddof=0)) if not recent_net.empty else np.nan
+
+                full_index = pd.date_range(daily_net.index.min(), requested_day, freq="D")
+                daily_net = daily_net.reindex(full_index, fill_value=0.0)
+                record["cf_ewm_net_7d"] = float(daily_net.ewm(span=7, adjust=False).mean().iloc[-1])
+                record["cf_ewm_net_14d"] = float(daily_net.ewm(span=14, adjust=False).mean().iloc[-1])
+                record["cf_ewm_net_30d"] = float(daily_net.ewm(span=30, adjust=False).mean().iloc[-1])
             else:
                 record["cf_volatility_30d"] = np.nan
+                record["cf_ewm_net_7d"] = 0.0
+                record["cf_ewm_net_14d"] = 0.0
+                record["cf_ewm_net_30d"] = 0.0
 
             records.append(record)
 

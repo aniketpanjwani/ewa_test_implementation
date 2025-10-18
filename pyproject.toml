@@ -1,0 +1,31 @@
+[project]
+name = "ewa-assessment"
+version = "0.1.0"
+description = "Implementation workspace for the EWA take-home assessment"
+readme = "README.md"
+authors = [{ name = "Automation Consulting" }]
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "scikit-learn>=1.4,<2.0",
+    "pyarrow>=15.0",
+    "matplotlib>=3.8",
+    "seaborn>=0.13",
+    "xgboost>=1.7"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.3",
+    "ipykernel>=6.29"
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0",
+    "ruff>=0.3",
+    "ipykernel>=6.29"
+]

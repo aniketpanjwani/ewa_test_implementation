@@ -102,6 +102,11 @@ def build_feature_matrix(
             "prior_days_since_last_advance",
             "prior_bad_rate",
             "prior_late_rate",
+            "prior_bad_streak",
+            "prior_late_streak",
+            "prior_writeoff_streak",
+            "prior_days_since_last_late",
+            "prior_days_since_last_writeoff",
             "cf_credit_30d",
             "cf_debit_30d",
             "cf_txn_count_30d",
@@ -280,6 +285,11 @@ def _compute_behavioural_features(advances: pd.DataFrame) -> pd.DataFrame:
 
     for user_id, user_advances in advances.groupby("user_id"):
         user_advances = user_advances.sort_values("requested_at").reset_index(drop=True)
+        bad_streak = 0.0
+        late_streak = 0.0
+        writeoff_streak = 0.0
+        last_late_ts: pd.Timestamp | None = None
+        last_writeoff_ts: pd.Timestamp | None = None
         for idx, row in user_advances.iterrows():
             prior = user_advances.iloc[:idx]
             record: Dict[str, Any] = {"advance_id": row["advance_id"]}
@@ -291,6 +301,11 @@ def _compute_behavioural_features(advances: pd.DataFrame) -> pd.DataFrame:
                         "prior_days_since_last_advance": np.nan,
                         "prior_bad_rate": np.nan,
                         "prior_late_rate": np.nan,
+                        "prior_bad_streak": 0.0,
+                        "prior_late_streak": 0.0,
+                        "prior_writeoff_streak": 0.0,
+                        "prior_days_since_last_late": np.nan,
+                        "prior_days_since_last_writeoff": np.nan,
                     }
                 )
             else:
@@ -310,7 +325,39 @@ def _compute_behavioural_features(advances: pd.DataFrame) -> pd.DataFrame:
                 else:
                     record["prior_bad_rate"] = np.nan
                     record["prior_late_rate"] = np.nan
+
+                record["prior_bad_streak"] = bad_streak
+                record["prior_late_streak"] = late_streak
+                record["prior_writeoff_streak"] = writeoff_streak
+                record["prior_days_since_last_late"] = (
+                    (row["requested_at"] - last_late_ts).total_seconds() / 86400.0
+                    if last_late_ts is not None
+                    else np.nan
+                )
+                record["prior_days_since_last_writeoff"] = (
+                    (row["requested_at"] - last_writeoff_ts).total_seconds() / 86400.0
+                    if last_writeoff_ts is not None
+                    else np.nan
+                )
             records.append(record)
+
+            # Update streak trackers with current outcome
+            if bool(row["bad_outcome"]):
+                bad_streak += 1.0
+            else:
+                bad_streak = 0.0
+
+            if bool(row["was_late"]):
+                late_streak += 1.0
+                last_late_ts = row["requested_at"]
+            else:
+                late_streak = 0.0
+
+            if bool(row["wrote_off"]):
+                writeoff_streak += 1.0
+                last_writeoff_ts = row["requested_at"]
+            else:
+                writeoff_streak = 0.0
 
     behaviour_df = pd.DataFrame.from_records(records).set_index("advance_id")
     for column in behaviour_df.columns:

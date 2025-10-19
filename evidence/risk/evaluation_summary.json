@@ -1,0 +1,338 @@
+{
+  "metrics": {
+    "train": {
+      "roc_auc": 0.7712871284721952,
+      "pr_auc": 0.5241933772143255,
+      "brier": 0.1402717568070416,
+      "log_loss": 0.4395993972912227,
+      "ece": 0.054341548620745035
+    },
+    "val": {
+      "roc_auc": 0.6669164088479848,
+      "pr_auc": 0.2736015433141071,
+      "brier": 0.14251758946699844,
+      "log_loss": 0.44923161975026077,
+      "ece": 0.010282843754382135
+    },
+    "test": {
+      "roc_auc": 0.6961314421461474,
+      "pr_auc": 0.31708660446323966,
+      "brier": 0.14654450566491053,
+      "log_loss": 0.4553100807604586,
+      "ece": 0.02275399701373032
+    }
+  },
+  "calibration_bins": 10,
+  "approval_targets": [
+    0.4,
+    0.6,
+    0.8
+  ],
+  "fee_pct": [
+    0.01,
+    0.02,
+    0.03
+  ],
+  "artifacts": {
+    "calibration": "/Users/aniketpanjwani/Projects/automation_consulting/ewa/implementation/artifacts/risk/eval/calibration_test.csv",
+    "calibration_plot": "/Users/aniketpanjwani/Projects/automation_consulting/ewa/implementation/artifacts/risk/eval/plots/calibration_test.png",
+    "slice_pay_frequency": "/Users/aniketpanjwani/Projects/automation_consulting/ewa/implementation/artifacts/risk/eval/slice_pay_frequency.csv",
+    "slice_amount_deciles": "/Users/aniketpanjwani/Projects/automation_consulting/ewa/implementation/artifacts/risk/eval/slice_amount_deciles.csv",
+    "business_simulation": "/Users/aniketpanjwani/Projects/automation_consulting/ewa/implementation/artifacts/risk/eval/business_simulation.csv",
+    "cohort_stats": "/Users/aniketpanjwani/Projects/automation_consulting/ewa/implementation/artifacts/risk/eval/cohort_stats.csv"
+  },
+  "training_summary": {
+    "generated_at": "2025-10-18T17:50:45.982893",
+    "seed": 42,
+    "selected_model": "hist_gradient_boosting",
+    "calibration": "isotonic",
+    "metrics": {
+      "train": {
+        "roc_auc": 0.7712871284721952,
+        "pr_auc": 0.5241933772143255,
+        "brier": 0.1402717568070416
+      },
+      "val": {
+        "roc_auc": 0.6669164088479848,
+        "pr_auc": 0.2736015433141071,
+        "brier": 0.14251758946699844
+      },
+      "test": {
+        "roc_auc": 0.6961314421461474,
+        "pr_auc": 0.31708660446323966,
+        "brier": 0.14654450566491053
+      }
+    },
+    "model_comparison": [
+      {
+        "model": "logistic_regression",
+        "val_metrics": {
+          "roc_auc": 0.6520816603439206,
+          "pr_auc": 0.2680207462488466,
+          "brier": 0.14485726661868878
+        }
+      },
+      {
+        "model": "hist_gradient_boosting",
+        "val_metrics": {
+          "roc_auc": 0.6709756370785641,
+          "pr_auc": 0.27715473291418236,
+          "brier": 0.14251863988186086
+        }
+      },
+      {
+        "model": "hist_gradient_boosting_tuned",
+        "val_metrics": {
+          "roc_auc": 0.6579927147866671,
+          "pr_auc": 0.2726109500348547,
+          "brier": 0.14688777094961689
+        }
+      },
+      {
+        "model": "xgboost",
+        "val_metrics": {
+          "roc_auc": 0.6627741080396633,
+          "pr_auc": 0.27551282878749994,
+          "brier": 0.14484159669070906
+        }
+      },
+      {
+        "model": "xgboost_tuned",
+        "val_metrics": {
+          "roc_auc": 0.6630009842841788,
+          "pr_auc": 0.27101842948565485,
+          "brier": 0.14485791883075674
+        }
+      }
+    ],
+    "split_counts": {
+      "train": 18468,
+      "val": 4599,
+      "test": 4451
+    },
+    "label_distribution": {
+      "train": {
+        "0": 14872,
+        "1": 3596
+      },
+      "val": {
+        "0": 3752,
+        "1": 847
+      },
+      "test": {
+        "0": 3574,
+        "1": 877
+      }
+    },
+    "feature_metadata": {
+      "numeric_columns": [
+        "advance_amount_cents",
+        "user_base_salary_cents",
+        "user_kyc_verified",
+        "utilization_ratio",
+        "days_since_last_payroll",
+        "avg_payroll_amount_3",
+        "payroll_cycle_median_days",
+        "amount_to_salary_ratio",
+        "last_payroll_amount",
+        "prior_advances_total",
+        "prior_advances_30d",
+        "prior_days_since_last_advance",
+        "prior_bad_rate",
+        "prior_late_rate",
+        "prior_bad_streak",
+        "prior_late_streak",
+        "prior_writeoff_streak",
+        "prior_days_since_last_late",
+        "prior_days_since_last_writeoff",
+        "employer_prior_adv_count",
+        "employer_prior_bad_rate",
+        "employer_prior_late_rate",
+        "employer_prior_writeoff_rate",
+        "employer_prior_bad_rate_30d",
+        "employer_prior_adv_30d",
+        "employer_prior_user_diversity",
+        "employer_prior_adv_per_user",
+        "cf_credit_30d",
+        "cf_debit_30d",
+        "cf_txn_count_30d",
+        "cf_volatility_30d",
+        "cf_net_14d",
+        "cf_net_30d",
+        "cf_net_60d",
+        "cf_net_90d",
+        "cf_ewm_net_7d",
+        "cf_ewm_net_14d",
+        "cf_ewm_net_30d"
+      ],
+      "categorical_columns": [
+        "pay_frequency",
+        "employer_id"
+      ],
+      "cashflow_windows": [
+        14,
+        30,
+        60,
+        90
+      ],
+      "feature_columns": [
+        "user_id",
+        "requested_at",
+        "advance_amount_cents",
+        "pay_frequency",
+        "user_base_salary_cents",
+        "user_kyc_verified",
+        "employer_id",
+        "days_since_last_payroll",
+        "last_payroll_amount",
+        "avg_payroll_amount_3",
+        "payroll_cycle_median_days",
+        "utilization_ratio",
+        "cf_net_14d",
+        "cf_net_30d",
+        "cf_net_60d",
+        "cf_net_90d",
+        "cf_credit_30d",
+        "cf_debit_30d",
+        "cf_txn_count_30d",
+        "cf_volatility_30d",
+        "cf_ewm_net_7d",
+        "cf_ewm_net_14d",
+        "cf_ewm_net_30d",
+        "prior_advances_total",
+        "prior_advances_30d",
+        "prior_days_since_last_advance",
+        "prior_bad_rate",
+        "prior_late_rate",
+        "prior_bad_streak",
+        "prior_late_streak",
+        "prior_writeoff_streak",
+        "prior_days_since_last_late",
+        "prior_days_since_last_writeoff",
+        "employer_prior_adv_count",
+        "employer_prior_bad_rate",
+        "employer_prior_late_rate",
+        "employer_prior_writeoff_rate",
+        "employer_prior_bad_rate_30d",
+        "employer_prior_adv_30d",
+        "employer_prior_user_diversity",
+        "employer_prior_adv_per_user",
+        "amount_to_salary_ratio"
+      ],
+      "reference_columns": [
+        "user_id",
+        "requested_at",
+        "employer_id"
+      ],
+      "label": "bad_outcome"
+    },
+    "split_boundaries": {
+      "start_month": "2024-01",
+      "train_end_month": "2024-12",
+      "val_end_month": "2025-03",
+      "test_end_month": "2025-06"
+    }
+  },
+  "feature_metadata": {
+    "numeric_columns": [
+      "advance_amount_cents",
+      "user_base_salary_cents",
+      "user_kyc_verified",
+      "utilization_ratio",
+      "days_since_last_payroll",
+      "avg_payroll_amount_3",
+      "payroll_cycle_median_days",
+      "amount_to_salary_ratio",
+      "last_payroll_amount",
+      "prior_advances_total",
+      "prior_advances_30d",
+      "prior_days_since_last_advance",
+      "prior_bad_rate",
+      "prior_late_rate",
+      "prior_bad_streak",
+      "prior_late_streak",
+      "prior_writeoff_streak",
+      "prior_days_since_last_late",
+      "prior_days_since_last_writeoff",
+      "employer_prior_adv_count",
+      "employer_prior_bad_rate",
+      "employer_prior_late_rate",
+      "employer_prior_writeoff_rate",
+      "employer_prior_bad_rate_30d",
+      "employer_prior_adv_30d",
+      "employer_prior_user_diversity",
+      "employer_prior_adv_per_user",
+      "cf_credit_30d",
+      "cf_debit_30d",
+      "cf_txn_count_30d",
+      "cf_volatility_30d",
+      "cf_net_14d",
+      "cf_net_30d",
+      "cf_net_60d",
+      "cf_net_90d",
+      "cf_ewm_net_7d",
+      "cf_ewm_net_14d",
+      "cf_ewm_net_30d"
+    ],
+    "categorical_columns": [
+      "pay_frequency",
+      "employer_id"
+    ],
+    "cashflow_windows": [
+      14,
+      30,
+      60,
+      90
+    ],
+    "feature_columns": [
+      "user_id",
+      "requested_at",
+      "advance_amount_cents",
+      "pay_frequency",
+      "user_base_salary_cents",
+      "user_kyc_verified",
+      "employer_id",
+      "days_since_last_payroll",
+      "last_payroll_amount",
+      "avg_payroll_amount_3",
+      "payroll_cycle_median_days",
+      "utilization_ratio",
+      "cf_net_14d",
+      "cf_net_30d",
+      "cf_net_60d",
+      "cf_net_90d",
+      "cf_credit_30d",
+      "cf_debit_30d",
+      "cf_txn_count_30d",
+      "cf_volatility_30d",
+      "cf_ewm_net_7d",
+      "cf_ewm_net_14d",
+      "cf_ewm_net_30d",
+      "prior_advances_total",
+      "prior_advances_30d",
+      "prior_days_since_last_advance",
+      "prior_bad_rate",
+      "prior_late_rate",
+      "prior_bad_streak",
+      "prior_late_streak",
+      "prior_writeoff_streak",
+      "prior_days_since_last_late",
+      "prior_days_since_last_writeoff",
+      "employer_prior_adv_count",
+      "employer_prior_bad_rate",
+      "employer_prior_late_rate",
+      "employer_prior_writeoff_rate",
+      "employer_prior_bad_rate_30d",
+      "employer_prior_adv_30d",
+      "employer_prior_user_diversity",
+      "employer_prior_adv_per_user",
+      "amount_to_salary_ratio"
+    ],
+    "reference_columns": [
+      "user_id",
+      "requested_at",
+      "employer_id"
+    ],
+    "label": "bad_outcome"
+  }
+}

@@ -10,11 +10,9 @@ pipelines for the repayment risk model (Task 2A) and an in-progress pay-date pre
 - **2A — Repayment Risk Model (complete):**
   - LightGBM + isotonic calibration achieves ROC‑AUC 0.701, PR‑AUC 0.314, Brier 0.146, and ECE 0.016 on the held-out 3-month window.
   - Time-aware splits, leakage guards, slice analysis, business simulation, and unit tests are implemented (`risk_model/report.md`, `tests/test_risk.py`).
-  - Evidence snapshots (metrics, business simulation, pay-frequency slices) copied to `../docs/implementation/evidence/risk/`.
 - **2B — Pay-Date Prediction (in progress):**
   - Heuristic predictor with cadence inference and per-user monthly offsets now delivers MAE 1.85 days overall (monthly MAE 1.15) and ±2-day hit rate 69.6% (monthly 82.1%).
   - Further tuning is needed to hit the overall MAE ≤ 1.8 and ±2-day ≥ 80% acceptance criteria; see `docs/paydate_model/report.md` for roadmap.
-  - Evaluation metrics captured under `../docs/implementation/evidence/paydate/`.
 - **2C — Support Bot:** not yet implemented (skeleton only).
 
 ## Repository layout (current)
